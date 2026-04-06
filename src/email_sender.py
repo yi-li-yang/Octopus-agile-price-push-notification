@@ -25,9 +25,9 @@ def _format_slot_range(valid_from, timezone):
 def compose_email(date_str, avg, ranges, negatives,
                   product_code=None, tariff_code=None, timezone=None):
     """Build an EmailMessage with plain text + HTML + chart attachment."""
-    product_code = product_code or os.environ.get("PRODUCT_CODE", "AGILE-24-10-01")
-    tariff_code = tariff_code or os.environ.get("TARIFF_CODE", "E-1R-AGILE-24-10-01-C")
-    timezone = timezone or os.environ.get("TIMEZONE", "Europe/London")
+    product_code = product_code or os.environ.get("PRODUCT_CODE") or "AGILE-24-10-01"
+    tariff_code = tariff_code or os.environ.get("TARIFF_CODE") or "E-1R-AGILE-24-10-01-C"
+    timezone = timezone or os.environ.get("TIMEZONE") or "Europe/London"
     region_letter = tariff_code[-1] if tariff_code else "C"
 
     has_negative = len(negatives) > 0
@@ -133,7 +133,7 @@ def send_email(date_str, avg, ranges, negatives):
     """Compose and send the daily email to all recipients."""
     msg = compose_email(date_str, avg, ranges, negatives)
 
-    sender = os.environ.get("SENDER_EMAIL", os.environ.get("SMTP_USER", ""))
+    sender = os.environ.get("SENDER_EMAIL") or os.environ.get("SMTP_USER") or ""
     recipients = [r.strip() for r in os.environ["RECIPIENTS"].split(",") if r.strip()]
 
     msg["From"] = sender
@@ -146,7 +146,7 @@ def send_email(date_str, avg, ranges, negatives):
 
 def send_fallback(date_str):
     """Send a fallback email when prices haven't been published."""
-    sender = os.environ.get("SENDER_EMAIL", os.environ.get("SMTP_USER", ""))
+    sender = os.environ.get("SENDER_EMAIL") or os.environ.get("SMTP_USER") or ""
     recipients = [r.strip() for r in os.environ["RECIPIENTS"].split(",") if r.strip()]
 
     msg = EmailMessage()

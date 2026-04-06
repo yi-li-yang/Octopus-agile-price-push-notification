@@ -37,7 +37,7 @@ def _load_dotenv():
 def main():
     _load_dotenv()
 
-    timezone = os.environ.get("TIMEZONE", "Europe/London")
+    timezone = os.environ.get("TIMEZONE") or "Europe/London"
     tz = ZoneInfo(timezone)
     tomorrow = datetime.now(tz) + timedelta(days=1)
     tomorrow_iso = tomorrow.strftime("%Y-%m-%d")

@@ -12,9 +12,9 @@ def fetch_prices(product_code=None, tariff_code=None, timezone=None):
 
     Returns a list of slot dicts sorted ascending by valid_from.
     """
-    product_code = product_code or os.environ.get("PRODUCT_CODE", "AGILE-24-10-01")
-    tariff_code = tariff_code or os.environ.get("TARIFF_CODE", "E-1R-AGILE-24-10-01-C")
-    timezone = timezone or os.environ.get("TIMEZONE", "Europe/London")
+    product_code = product_code or os.environ.get("PRODUCT_CODE") or "AGILE-24-10-01"
+    tariff_code = tariff_code or os.environ.get("TARIFF_CODE") or "E-1R-AGILE-24-10-01-C"
+    timezone = timezone or os.environ.get("TIMEZONE") or "Europe/London"
 
     tz = ZoneInfo(timezone)
     now = datetime.now(tz)
