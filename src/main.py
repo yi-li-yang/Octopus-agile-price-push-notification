@@ -57,9 +57,13 @@ def main():
     if len(slots) < 48:
         is_last_run = os.environ.get("IS_LAST_RUN", "").lower() == "true"
         if is_last_run:
-            log.warning("Prices not published by final run, sending fallback")
-            email_sender.send_fallback(date_display)
-            marker.write_text("fallback")
+            fallback_marker = SENT_MARKER_DIR / f"fallback-{tomorrow_iso}"
+            if fallback_marker.exists():
+                log.info("Fallback already sent for %s, skipping", tomorrow_iso)
+            else:
+                log.warning("Prices not published by final run, sending fallback")
+                email_sender.send_fallback(date_display)
+                fallback_marker.write_text("fallback")
         else:
             log.info("Only %d slots, prices not yet published", len(slots))
         return
