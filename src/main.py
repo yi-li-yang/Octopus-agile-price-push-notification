@@ -54,7 +54,13 @@ def main():
     log.info("Fetching prices for %s", tomorrow_iso)
     slots = fetch.fetch_prices(timezone=timezone)
 
-    if len(slots) < 48:
+    # During BST (UTC+1) the last hour of a London day falls in the next UTC day
+    # and isn't published yet, so the API returns 46 slots instead of 48.
+    offset_slots = int(tomorrow.utcoffset().total_seconds() // 1800)
+    expected_slots = 48 - offset_slots
+    log.info("Got %d slots, expecting %d (UTC offset: %s)", len(slots), expected_slots, tomorrow.utcoffset())
+
+    if len(slots) < expected_slots:
         is_last_run = os.environ.get("IS_LAST_RUN", "").lower() == "true"
         if is_last_run:
             fallback_marker = SENT_MARKER_DIR / f"fallback-{tomorrow_iso}"
