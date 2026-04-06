@@ -1,0 +1,74 @@
+name: Daily Agile Notifier
+
+on:
+  schedule:
+    # UTC times — during BST these are 16:30, 17:30, 18:30 London time.
+    # During GMT (winter) they shift to 15:30, 16:30, 17:30 London time.
+    - cron: "30 15 * * *"
+    - cron: "30 16 * * *"
+    - cron: "30 17 * * *"
+  workflow_dispatch:
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compute tomorrow's date
+        id: date
+        run: echo "tomorrow=$(TZ=Europe/London date -d '+1 day' +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+
+      - name: Restore sent marker
+        id: cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .sent_markers
+          key: agile-sent-${{ steps.date.outputs.tomorrow }}
+
+      - name: Check if already sent
+        id: check
+        run: |
+          if [ -f ".sent_markers/sent-${{ steps.date.outputs.tomorrow }}" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "Already sent for ${{ steps.date.outputs.tomorrow }}, skipping"
+          fi
+
+      - uses: actions/setup-python@v5
+        if: steps.check.outputs.skip != 'true'
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        if: steps.check.outputs.skip != 'true'
+        run: pip install -r requirements.txt
+
+      - name: Run notifier
+        if: steps.check.outputs.skip != 'true'
+        env:
+          RECIPIENTS: ${{ secrets.RECIPIENTS }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
+          PRODUCT_CODE: ${{ secrets.PRODUCT_CODE }}
+          TARIFF_CODE: ${{ secrets.TARIFF_CODE }}
+          TIMEZONE: ${{ secrets.TIMEZONE }}
+          IS_LAST_RUN: ${{ github.event_name == 'workflow_dispatch' || github.event.schedule == '30 17 * * *' }}
+        run: python -m src.main
+
+      - name: Check for sent marker
+        if: steps.check.outputs.skip != 'true'
+        id: sent
+        run: |
+          if [ -f ".sent_markers/sent-${{ steps.date.outputs.tomorrow }}" ]; then
+            echo "should_save=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Cache sent marker
+        if: steps.sent.outputs.should_save == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: .sent_markers
+          key: agile-sent-${{ steps.date.outputs.tomorrow }}
