@@ -1,5 +1,6 @@
 # Agile Octopus Daily Price Notifier
 
+
 A small GitHub Actions cron job that fetches tomorrow's [Agile Octopus](https://octopus.energy/agile/) half-hourly electricity prices, generates an Octopus-style bar chart, computes the daily average, and emails it to a configurable list of recipients every evening.
 
 No server. No database. No cost.
@@ -7,6 +8,8 @@ No server. No database. No cost.
 ---
 
 ## What you get
+
+![Email preview](https://raw.githubusercontent.com/yi-li-yang/Octopus-agile-price-push-notification/main/thumb.png)
 
 Every evening (after Octopus publishes the next day's prices), each recipient receives an email like this:
 
