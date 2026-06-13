@@ -1,0 +1,28 @@
+name: Keepalive
+
+on:
+  schedule:
+    # Runs at 00:00 UTC on the 1st of every month — keeps the repo "active"
+    # so GitHub doesn't auto-disable the scheduled Daily Agile Notifier workflow
+    # (which happens after 60 days without a push).
+    - cron: "0 0 1 * *"
+  workflow_dispatch:
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update keepalive timestamp
+        run: date -u +"%Y-%m-%dT%H:%M:%SZ" > .keepalive
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .keepalive
+          git diff --staged --quiet || git commit -m "chore: keepalive ping"
+          git push
