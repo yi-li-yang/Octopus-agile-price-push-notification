@@ -34,6 +34,20 @@ def _load_dotenv():
             os.environ.setdefault(key, value)
 
 
+def expected_slot_count(target):
+    """Number of half-hour slots Octopus publishes for the target local day.
+
+    Agile prices are published up to 23:00 London time on the target day, so a
+    full set runs from 00:00 to 23:00 local: 46 slots on a normal day, 44 on the
+    spring-forward day and 48 on the autumn fall-back day.
+    """
+    utc = ZoneInfo("UTC")
+    day_start = target.replace(hour=0, minute=0, second=0, microsecond=0)
+    publish_end = target.replace(hour=23, minute=0, second=0, microsecond=0)
+    span = publish_end.astimezone(utc) - day_start.astimezone(utc)
+    return int(span.total_seconds() // 1800)
+
+
 def main():
     _load_dotenv()
 
@@ -54,11 +68,8 @@ def main():
     log.info("Fetching prices for %s", tomorrow_iso)
     slots = fetch.fetch_prices(timezone=timezone)
 
-    # During BST (UTC+1) the last hour of a London day falls in the next UTC day
-    # and isn't published yet, so the API returns 46 slots instead of 48.
-    offset_slots = int(tomorrow.utcoffset().total_seconds() // 1800)
-    expected_slots = 48 - offset_slots
-    log.info("Got %d slots, expecting %d (UTC offset: %s)", len(slots), expected_slots, tomorrow.utcoffset())
+    expected_slots = expected_slot_count(tomorrow)
+    log.info("Got %d slots, expecting %d", len(slots), expected_slots)
 
     if len(slots) < expected_slots:
         is_last_run = os.environ.get("IS_LAST_RUN", "").lower() == "true"
