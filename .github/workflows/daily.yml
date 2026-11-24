@@ -1,12 +1,13 @@
 name: Daily Agile Notifier
 
 on:
-  schedule:
-    # UTC times — during BST these are 16:30, 17:30, 18:30 London time.
-    # During GMT (winter) they shift to 15:30, 16:30, 17:30 London time.
-    - cron: "30 15 * * *"
-    - cron: "30 16 * * *"
-    - cron: "30 17 * * *"
+  # Daily emails are switched off. To turn them back on, restore this schedule:
+  # schedule:
+  #   # UTC times — during BST these are 16:30, 17:30, 18:30 London time.
+  #   # During GMT (winter) they shift to 15:30, 16:30, 17:30 London time.
+  #   - cron: "30 15 * * *"
+  #   - cron: "30 16 * * *"
+  #   - cron: "30 17 * * *"
   workflow_dispatch:
 
 jobs:
